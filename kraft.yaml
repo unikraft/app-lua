@@ -1,0 +1,23 @@
+specification: '0.4'
+
+unikraft: '0.4'
+
+architectures:
+  x86_64: true
+
+platforms:
+  linuxu: true
+  kvm: true
+  xen: true
+
+volumes:
+  initrd:
+      type: initrd
+
+libraries:
+  newlib: '0.4'
+  lua:
+    version: '0.4'
+    kconfig:
+          - CONFIG_LIBLUA=y    
+          - CONFIG_LIBLUA_MAIN_FUNCTION=y
