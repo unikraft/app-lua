@@ -10,14 +10,16 @@ platforms:
   kvm: true
   xen: true
 
-volumes:
-  initrd:
-      type: initrd
+run:
+  volumes:
+    initrd:
+      driver: initrd
+      source: ./helloworld.lua
 
 libraries:
   newlib: '0.4'
   lua:
     version: '0.4'
     kconfig:
-          - CONFIG_LIBLUA=y    
-          - CONFIG_LIBLUA_MAIN_FUNCTION=y
+      - CONFIG_LIBLUA=y
+      - CONFIG_LIBLUA_MAIN_FUNCTION=y
