@@ -1,6 +1,6 @@
 specification: '0.4'
 
-unikraft: '0.4'
+unikraft: '0.5'
 
 architectures:
   x86_64: true
@@ -17,9 +17,9 @@ run:
       source: ./helloworld.lua
 
 libraries:
-  newlib: '0.4'
+  newlib: '0.5'
   lua:
-    version: '0.4'
+    version: '0.5'
     kconfig:
       - CONFIG_LIBLUA=y
       - CONFIG_LIBLUA_MAIN_FUNCTION=y
