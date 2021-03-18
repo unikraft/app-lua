@@ -1,21 +1,13 @@
-specification: '0.4'
-
+specification: '0.5'
+name: lua
 unikraft: '0.5'
-
-architectures:
-  x86_64: true
-
-platforms:
-  linuxu: true
-  kvm: true
-  xen: true
-
-run:
-  volumes:
-    initrd:
-      driver: initrd
-      source: ./helloworld.lua
-
+targets:
+  - architecture: x86_64
+    platform: linuxu
+  - architecture: x86_64
+    platform: kvm
+  - architecture: x86_64
+    platform: xen
 libraries:
   newlib: '0.5'
   lua:
@@ -23,3 +15,7 @@ libraries:
     kconfig:
       - CONFIG_LIBLUA=y
       - CONFIG_LIBLUA_MAIN_FUNCTION=y
+volumes:
+  initrd:
+    driver: initrd
+    source: ./helloworld.lua
