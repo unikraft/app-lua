@@ -8,6 +8,8 @@ targets:
     platform: kvm
   - architecture: x86_64
     platform: xen
+  - architecture: arm64
+    platform: kvm
 libraries:
   newlib: '0.5'
   lua:
