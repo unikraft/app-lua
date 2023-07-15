@@ -1,6 +1,6 @@
 specification: '0.5'
 name: lua
-unikraft: '0.5'
+unikraft: 'stable'
 targets:
   - architecture: x86_64
     platform: linuxu
@@ -9,9 +9,10 @@ targets:
   - architecture: x86_64
     platform: xen
 libraries:
-  newlib: '0.5'
+  musl:
+    version: stable
   lua:
-    version: '0.5'
+    version: '0.13.1'
     kconfig:
       - CONFIG_LIBLUA=y
       - CONFIG_LIBLUA_MAIN_FUNCTION=y
