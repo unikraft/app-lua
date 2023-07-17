@@ -5,14 +5,14 @@ targets:
   - architecture: x86_64
     platform: linuxu
   - architecture: x86_64
-    platform: kvm
+    platform: qemu
   - architecture: x86_64
     platform: xen
 libraries:
   musl:
-    version: stable
+    version: 'stable'
   lua:
-    version: '0.13.1'
+    version: 'stable'
     kconfig:
       - CONFIG_LIBLUA=y
       - CONFIG_LIBLUA_MAIN_FUNCTION=y
