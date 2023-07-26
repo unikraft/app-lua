@@ -1,0 +1,5 @@
+/build/
+/.unikraft/
+/.config
+/.config.old
+/fs0.cpio
