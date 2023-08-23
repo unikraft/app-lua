@@ -1,0 +1,26 @@
+specification: '0.5'
+name: lua
+unikraft:
+  version: cloud
+targets:
+  - name: kraftcloud-x86_64
+    architecture: x86_64
+    platform: firecracker
+    kconfig:
+      - CONFIG_PLAT_KVM=y
+      - CONFIG_KVM_BOOT_PROTO_LXBOOT=y
+      - CONFIG_KVM_VMM_FIRECRACKER=y
+      - CONFIG_LIBVFSCORE_AUTOMOUNT_ROOTFS=y
+      - CONFIG_LIBVFSCORE_ROOTFS_INITRD=y
+      - CONFIG_LIBVFSCORE_ROOTFS="initrd"
+libraries:
+  musl:
+    version: stable
+  lua:
+    version: stable
+    kconfig:
+      - CONFIG_LIBLUA=y
+      - CONFIG_LIBLUA_MAIN_FUNCTION=y
+  ukp-bin:
+    source: https://github.com/unikraft-io/lib-ukp-bin
+    version: stable
