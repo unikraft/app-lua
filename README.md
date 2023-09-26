@@ -40,7 +40,7 @@ kraft build --target lua-qemu-x86_64-initrd -j $(nproc)
 Once built, you can instantiate the unikernel via:
 
 ```console
-kraft run --initrd fs0/ /helloworld.lua
+kraft run --initrd rootfs/ /helloworld.lua
 ```
 
 ## Work with the Basic Build & Run Toolchain (Advanced)
@@ -57,12 +57,12 @@ For building and running everything for `x86_64`, follow the steps below:
 ```console
 git clone https://github.com/unikraft/app-lua lua
 cd lua/
-git clone https://github.com/unikraft/unikraft .unikraft/unikraft
-git clone https://github.com/unikraft/lib-lua .unikraft/libs/lua
-git clone https://github.com/unikraft/lib-musl .unikraft/libs/musl
-UK_DEFCONFIG=$(pwd)/.config.lua-qemu-x86_64-9pfs make defconfig
-make -j $(nproc)
-qemu-system-x86_64 -fsdev local,id=myid,path=$(pwd)/fs0,security_model=none -device virtio-9p-pci,fsdev=myid,mount_tag=fs0,disable-modern=on,disable-legacy=off -kernel build/lua_qemu-x86_64 -nographic -append "-- /helloworld.lua"
+./scripts/setup.sh
+wget https://raw.githubusercontent.com/unikraft/app-testing/staging/scripts/generate.py -O scripts/generate.py
+chmod a+x scripts/generate.py
+./scripts/generate.py
+./scripts/build/make-qemu-x86_64.sh
+./scripts/run/qemu-x86_64-lua.sh
 ```
 
 This will configure, build and run the Lua application, resulting in a `Hello world!` message being printed, along with the Unikraft banner.
@@ -70,10 +70,14 @@ This will configure, build and run the Lua application, resulting in a `Hello wo
 The same can be done for `AArch64`, by running the commands below:
 
 ```console
-make properclean
-UK_DEFCONFIG=$(pwd)/.config.lua-qemu-aarch64-9pfs make defconfig
-make -j $(nproc)
-qemu-system-aarch64 -fsdev local,id=myid,path=$(pwd)/fs0,security_model=none -device virtio-9p-pci,fsdev=myid,mount_tag=fs0,disable-modern=on,disable-legacy=off -kernel build/lua_qemu-arm64 -nographic -append "-- /helloworld.lua" -machine virt -cpu max
+git clone https://github.com/unikraft/app-lua lua
+cd lua/
+./scripts/setup.sh
+wget https://raw.githubusercontent.com/unikraft/app-testing/staging/scripts/generate.py -O scripts/generate.py
+chmod a+x scripts/generate.py
+./scripts/generate.py
+./scripts/build/make-qemu-arm64.sh
+./scripts/run/qemu-arm64-lua.sh
 ```
 
 Similar to the `x86_64` build, this will result in a `Hello world!` message being printed.
@@ -147,58 +151,25 @@ Follow the steps below for the setup:
      You will see the contents of the repository:
 
      ```text
-     .config.lua-fc-x86_64-initrd   .config.lua-qemu-aarch64-initrd  .config.lua-qemu-x86_64-initrd  kraft.yaml  Makefile  README.md [...]
+     Makefile  Makefile.uk  README.md  defconfigs/  kraft.cloud.yaml  kraft.yaml  rootfs/  workdir/
      ```
 
-  1. While inside the `lua/` directory, create the `.unikraft/` directory:
+  1. While inside the `lua/` directory, clone all required repositories by using the `setup.sh` script:
 
      ```console
-     mkdir .unikraft
+     ./scripts/setup.sh
      ```
 
-     Enter the `.unikraft/` directory:
+  1. Use the `tree` command to inspect the contents of the `workdir/` directory:
 
      ```console
-     cd .unikraft/
+     tree -F -L 2 workdir/
      ```
 
-  1. While inside the `.unikraft/` directory, clone the [`unikraft` repository](https://github.com/unikraft/unikraft):
-
-     ```console
-     git clone https://github.com/unikraft/unikraft unikraft
-     ```
-
-  1. While inside the `.unikraft/` directory, create the `libs/` directory:
-
-     ```console
-     mkdir libs
-     ```
-
-  1. While inside the `.unikraft/` directory, clone the library repositories in the `libs/` directory:
-
-     ```console
-     git clone https://github.com/unikraft/lib-lua libs/lua
-
-     git clone https://github.com/unikraft/lib-musl libs/musl
-     ```
-
-  1. Get back to the application directory:
-
-     ```console
-     cd ../
-     ```
-
-     Use the `tree` command to inspect the contents of the `.unikraft/` directory.
-     It should print something like this:
-
-     ```console
-     tree -F -L 2 .unikraft/
-     ```
-
-     You should see the following layout:
+     The layout of the `workdir/` directory should look something like this:
 
      ```text
-     .unikraft/
+     workdir/
      |-- libs/
      |   |-- lua/
      |   `-- musl/
@@ -219,6 +190,81 @@ Follow the steps below for the setup:
      10 directories, 7 files
      ```
 
+## Scripted Building and Running
+
+To make it easier to build, run and test different configurations, the repository provides a set of scripts that do everything required.
+These are scripts used for building different configurations of the `lua` application and for running these with all the requirements behind the scenes: setting up archives etc.
+
+First of all, grab the [`generate.py` script](https://github.com/unikraft/app-testing/blob/staging/scripts/generate.py) and place it in the `scripts/` directory by running:
+
+```console
+wget https://raw.githubusercontent.com/unikraft/app-testing/staging/scripts/generate.py -O scripts/generate.py
+chmod a+x scripts/generate.py
+```
+
+```console
+./scripts/generate.py
+```
+
+The scripts (as shell scripts) are now generated in `scripts/build/` and `scripts/run/`:
+
+```text
+scripts/
+|-- build/
+|   |-- kraft-fc-arm64-initrd.sh*
+|   |-- kraft-fc-x86_64-initrd.sh*
+|   |-- kraft-qemu-arm64-9pfs.sh*
+|   |-- kraft-qemu-arm64-initrd.sh*
+|   |-- kraft-qemu-x86_64-9pfs.sh*
+|   |-- kraft-qemu-x86_64-initrd.sh*
+|   |-- make-fc-x86_64-initrd.sh*
+|   |-- make-qemu-arm64-9pfs.sh*
+|   |-- make-qemu-arm64-initrd.sh*
+|   |-- make-qemu-x86_64-9pfs.sh*
+|   `-- make-qemu-x86_64-initrd.sh*
+|-- generate.py*
+|-- run/
+|   |-- fc-x86_64-initrd.json
+|   |-- fc-x86_64-initrd.sh*
+|   |-- kraft-fc-arm64-initrd.sh*
+|   |-- kraft-fc-x86_64-initrd.sh*
+|   |-- kraft-qemu-arm64-9pfs.sh*
+|   |-- kraft-qemu-arm64-initrd.sh*
+|   |-- kraft-qemu-x86_64-9pfs.sh*
+|   |-- kraft-qemu-x86_64-initrd.sh*
+|   |-- qemu-arm64-9pfs.sh*
+|   |-- qemu-arm64-initrd.sh*
+|   |-- qemu-x86_64-9pfs.sh*
+|   `-- qemu-x86_64-initrd.sh*
+|-- run.yaml
+`-- setup.sh*
+```
+
+They are shell scripts, so you can use an editor or a text viewer to check their contents:
+
+```console
+cat scripts/run/kraft-fc-x86_64-initrd.sh
+```
+
+Now, invoke each script to build and run the application.
+A sample build and run set of commands is:
+
+```console
+./scripts/build/make-qemu-x86_64-9pfs.sh
+./scripts/run/qemu-x86_64-9pfs.sh
+```
+
+Another one is:
+
+```console
+./scripts/build/make-qemu-arm64-9pfs.sh
+./scripts/run/qemu-arm64-9pfs.sh
+```
+
+Note that Firecracker only works with initrd (not 9pfs).
+
+## Detailed Steps
+
 ### Configure
 
 Configuring, building and running a Unikraft application depends on our choice of platform and architecture.
@@ -229,14 +275,14 @@ Supported architectures are x86_64 and AArch64.
 
 Builds can use a 9pfs-based filesystem or an initial ramdisk (`initrd`)-based filesystem.
 
-Use the corresponding the configuration files (`.config.lua-...`), according to your choice of platform, architecture and filesystem.
+Use the corresponding the configuration files (`defconfigs/*`), according to your choice of platform, architecture and filesystem.
 
 #### QEMU x86_64
 
-Use the `.config.lua-qemu-x86_64-9pfs` configuration file together with `make defconfig` to create the configuration file:
+Use the `defconfigs/qemu-x86_64-9pfs` configuration file together with `make defconfig` to create the configuration file:
 
 ```console
-UK_DEFCONFIG=$(pwd)/.config.lua-qemu-x86_64-9pfs make defconfig
+UK_DEFCONFIG=$(pwd)/defconfigs/qemu-x86_64-9pfs make defconfig
 ```
 
 This results in the creation of the `.config` file:
@@ -250,10 +296,10 @@ The `.config` file will be used in the build step.
 
 #### QEMU AArch64
 
-Use the `.config.lua-qemu-aarch64-9pfs` configuration file together with `make defconfig` to create the configuration file:
+Use the `defconfigs/qemu-arm64-9pfs` configuration file together with `make defconfig` to create the configuration file:
 
 ```console
-UK_DEFCONFIG=$(pwd)/.config.lua_qemu-aarch64-9pfs make defconfig
+UK_DEFCONFIG=$(pwd)/defconfigs/qemu-arm64-9pfs make defconfig
 ```
 
 Similar to the x86_64 configuration, this results in the creation of the `.config` file that will be used in the build step.
@@ -261,7 +307,7 @@ Similar to the x86_64 configuration, this results in the creation of the `.confi
 ### Build
 
 Building uses as input the `.config` file from above, and results in a unikernel image as output.
-The unikernel output image, together with intermediary build files, are stored in the `build/` directory.
+The unikernel output image, together with intermediary build files, are stored in the `workdir/build/` directory.
 
 #### Clean Up
 
@@ -295,7 +341,7 @@ You will see a list of all the files generated by the build system:
   SCSTRIP lua_qemu-x86_64
   GZ      lua_qemu-x86_64.gz
 rm /home/unikraft/lua/build/liblua/origin/lua-5.4.4/src/lua.hpp
-make[1]: Leaving directory '/home/unikraft/lua/.unikraft/unikraft'
+make[1]: Leaving directory '/home/unikraft/lua/workdir/unikraft'
 ```
 
 At the end of the build command, the `lua_qemu-x86_64` unikernel image is generated.
@@ -328,7 +374,7 @@ Same as in the x86_64 setup, you will see a list of all the files generated by t
   SCSTRIP lua_qemu-arm64
   GZ      lua_qemu-arm64.gz
 rm /home/unikraft/lua/build/liblua/origin/lua-5.4.4/src/lua.hpp
-make[1]: Leaving directory '/home/unikraft/lua/.unikraft/unikraft'
+make[1]: Leaving directory '/home/unikraft/lua/workdir/unikraft'
 ```
 
 Similarly to x86_64, at the end of the build command, the `lua_qemu-arm64` unikernel image is generated.
@@ -343,7 +389,7 @@ Run the resulting image using `qemu-system`.
 To run the QEMU x86_64 build, use `qemu-system-x86_64`:
 
 ```console
-qemu-system-x86_64 -fsdev local,id=myid,path=$(pwd)/fs0,security_model=none -device virtio-9p-pci,fsdev=myid,mount_tag=fs0,disable-modern=on,disable-legacy=off -kernel build/lua_qemu-x86_64 -nographic -append "-- /helloworld.lua"
+qemu-system-x86_64 -fsdev local,id=myid,path=$(pwd)/rootfs,security_model=none -device virtio-9p-pci,fsdev=myid,mount_tag=rootfs,disable-modern=on,disable-legacy=off -kernel workdir/build/lua_qemu-x86_64 -nographic -append "-- /helloworld.lua"
 ```
 
 You will be met by the Unikraft banner, along with the `Hello, world!` message:
@@ -364,7 +410,7 @@ hello world from initrd
 To run the AArch64 build, use `qemu-system-aarch64`:
 
 ```console
-qemu-system-aarch64 -fsdev local,id=myid,path=$(pwd)/fs0,security_model=none -device virtio-9p-pci,fsdev=myid,mount_tag=fs0,disable-modern=on,disable-legacy=off -kernel build/lua_qemu-arm64 -nographic -append "-- /helloworld.lua" -machine virt -cpu max
+qemu-system-aarch64 -fsdev local,id=myid,path=$(pwd)/rootfs,security_model=none -device virtio-9p-pci,fsdev=myid,mount_tag=rootfs,disable-modern=on,disable-legacy=off -kernel workdir/build/lua_qemu-arm64 -nographic -append "-- /helloworld.lua" -machine virt -cpu max
 ```
 
 Same as running on x86_64, the application will start:
@@ -386,30 +432,30 @@ The examples above use 9pfs as the filesystem interface.
 In order two use initrd, you need to first create a CPIO archive that will be passed as the initial ramdisk:
 
 ```console
-cd fs0 && find -depth -print | tac | bsdcpio -o --format newc > ../fs0.cpio && cd ..
+cd rootfs && find -depth -print | tac | bsdcpio -o --format newc > ../rootfs.cpio && cd ..
 ```
 
 Clean up previous configuration, use the initrd configuration and build the unikernel by using the commands:
 
 ```console
 make distclean
-UK_DEFCONFIG=$(pwd)/.config.lua-qemu-x86_64-initrd make defconfig
+UK_DEFCONFIG=$(pwd)/defconfigs/qemu-x86_64-initrd make defconfig
 make -j $(nproc)
 ```
 
 Then, run the resulting image with:
 
 ```console
-qemu-system-x86_64 -kernel build/lua_qemu-x86_64 -nographic -initrd fs0.cpio -append "-- /helloworld.lua"
+qemu-system-x86_64 -kernel workdir/build/lua_qemu-x86_64 -nographic -initrd rootfs.cpio -append "-- /helloworld.lua"
 ```
 
 The commands for AArch64 are similar:
 
 ```console
 make distclean
-UK_DEFCONFIG=$(pwd)/.config.lua-qemu-aarch64-initrd make defconfig
+UK_DEFCONFIG=$(pwd)/defconfigs/qemu-arm64-initrd make defconfig
 make -j $(nproc)
-qemu-system-aarch64 -kernel build/lua_qemu-arm64 -nographic -initrd fs0.cpio -append "-- /helloworld.lua" -machine virt -cpu max
+qemu-system-aarch64 -kernel workdir/build/lua_qemu-arm64 -nographic -initrd rootfs.cpio -append "-- /helloworld.lua" -machine virt -cpu max
 ```
 
 ### Building and Running with Firecracker
@@ -420,14 +466,14 @@ Configure and build commands are similar to a QEMU-based build with an initrd-ba
 
 ```console
 make distclean
-UK_DEFCONFIG=$(pwd)/.config.lua-fc-x86_64-initrd make defconfig
+UK_DEFCONFIG=$(pwd)/defconfigs/fc-x86_64-initrd make defconfig
 make -j $(nproc)
 ```
 
 For running, a CPIO archive of the filesystem is required to be passed as the initial ramdisk:
 
 ```console
-cd fs0 && find -depth -print | tac | bsdcpio -o --format newc > ../fs0.cpio && cd ..
+cd rootfs && find -depth -print | tac | bsdcpio -o --format newc > ../rootfs.cpio && cd ..
 ```
 
 To use Firecraker, you need to download a [Firecracker release](https://github.com/firecracker-microvm/firecracker/releases).
@@ -446,7 +492,7 @@ Pass this file to the `firecracker-x86_64` command to run the Unikernel instance
 
 ```console
 rm /tmp/firecracker.socket
-firecracker-x86_64 --api-sock /tmp/firecracker.socket --config-file lua-fc-x86_64-initrd.json
+firecracker-x86_64 --api-sock /tmp/firecracker.socket --config-file scripts/run/fc-x86_64-initrd-lua.json
 ```
 
 Same as running with QEMU, the application will start:
