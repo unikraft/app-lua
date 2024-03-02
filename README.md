@@ -1,3 +1,6 @@
+**This repository is no longer maintained.
+Please visit the [application catalog](https://github.com/unikraft/catalog/tree/main/library/lua/5.4).**
+
 # Lua on Unikraft
 
 This application starts a Lua interpreter with Unikraft.
